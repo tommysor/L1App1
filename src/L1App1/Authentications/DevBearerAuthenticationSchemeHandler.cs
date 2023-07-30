@@ -19,20 +19,16 @@ public sealed class DevBearerAuthenticationSchemeHandler : AuthenticationHandler
     protected override async Task<AuthenticateResult> HandleAuthenticateAsync()
     {
         await Task.CompletedTask;
-        var authorizationHeaderValue = Context.Request.Headers.Authorization.FirstOrDefault();
-        var parts = authorizationHeaderValue?.Split(' ');
-        if (parts?.Length != 2)
+        var apiKeyHeaderValue = Context.Request.Headers["DevBearer"].FirstOrDefault();
+        var result = apiKeyHeaderValue switch
         {
-            return AuthenticateResult.NoResult();
-        }
-
-        if (parts[0] != "DevBearer")
-        {
-            return AuthenticateResult.NoResult();
-        }
-
-        var result = parts[1] switch
-        {
+            "Guest1" => AuthenticateResult.Success(new AuthenticationTicket(
+                new ClaimsPrincipal(new ClaimsIdentity(new[]
+                {
+                    new Claim(ClaimTypes.Name, "Guest1"),
+                    new Claim(ClaimTypes.Role, "Guest"),
+                }, "DevBearer")),
+                "DevBearer")),
             "User1" => AuthenticateResult.Success(new AuthenticationTicket(
                 new ClaimsPrincipal(new ClaimsIdentity(new[]
                 {

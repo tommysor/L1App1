@@ -1,10 +1,36 @@
 using L1App1.Authentications;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.OpenApi.Models;
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+builder.Services.AddSwaggerGen(options =>
+{
+    options.AddSecurityDefinition("DevBearer", new OpenApiSecurityScheme
+    {
+        Description = "Dev bearer token",
+        Type = SecuritySchemeType.ApiKey,
+        Name = "DevBearer",
+        In = ParameterLocation.Header,
+        Scheme = "DevBearer",
+    });
+    var scheme = new OpenApiSecurityScheme
+    {
+        Reference = new OpenApiReference
+        {
+            Type = ReferenceType.SecurityScheme,
+            Id = "DevBearer"
+        },
+        In = ParameterLocation.Header,
+    };
+    var requirement = new OpenApiSecurityRequirement
+    {
+        { scheme, new List<string>() }
+    };
+    options.AddSecurityRequirement(requirement);
+});
 
 builder.Services.AddHttpContextAccessor();
 
@@ -22,11 +48,12 @@ builder.Services.AddAuthentication(options =>
 
 builder.Services.AddAuthorization(options =>
 {
-    const string alwaysDenyPolicyName = "AlwaysDeny";
-    options.AddPolicy(alwaysDenyPolicyName, policy => policy.RequireAssertion(_ => false));
-    var alwaysDeny = options.GetPolicy(alwaysDenyPolicyName)!;
-    options.DefaultPolicy = alwaysDeny;
-    options.FallbackPolicy = alwaysDeny;
+    var alwaysDenyPolicy = new AuthorizationPolicyBuilder()
+        .RequireAssertion(_ => false)
+        .Build();
+    options.AddPolicy("AlwaysDeny", alwaysDenyPolicy);
+    options.DefaultPolicy = alwaysDenyPolicy;
+    options.FallbackPolicy = alwaysDenyPolicy;
 
     options.AddPolicy("User", policy => policy.RequireRole("User"));
 });
