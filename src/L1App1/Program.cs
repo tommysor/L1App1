@@ -82,7 +82,8 @@ app.MapGet("/", () => "Hello World!")
 
 app.MapGet("Secured/{id}", Endpoints.SecuredEndpoint)
    .WithTags("Secured")
+   .WithOpenApi()
    .RequireAuthorization("User")
-   .WithOpenApi();
+   ;
 
 app.Run();
