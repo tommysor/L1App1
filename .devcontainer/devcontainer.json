@@ -6,9 +6,9 @@
 	"customizations": {
 		"vscode": {
 			"extensions": [
-				"ms-dotnettools.csdevkit",
-				"ms-dotnettools.csharp@prerelease",
-				"GitHub.copilot"
+				"ms-dotnettools.csdevkit@prerelease",
+				"GitHub.copilot",
+				"humao.rest-client"
 			]
 		}
 	}

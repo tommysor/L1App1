@@ -1,3 +1,4 @@
+using L1App1.Authentications;
 using Microsoft.AspNetCore.Mvc;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -9,9 +10,26 @@ builder.Services.AddHttpContextAccessor();
 
 //todo Add secrets from vault
 
-//todo Add authentication
+builder.Services.AddAuthentication(options =>
+{
+    if (builder.Environment.IsDevelopment())
+    {
+         options.AddScheme<DevBearerAuthenticationSchemeHandler>("DevBearer", "DevBearer");
+    }
 
-//todo Add authorization
+    //todo Add authentication schemes for production
+});
+
+builder.Services.AddAuthorization(options =>
+{
+    const string alwaysDenyPolicyName = "AlwaysDeny";
+    options.AddPolicy(alwaysDenyPolicyName, policy => policy.RequireAssertion(_ => false));
+    var alwaysDeny = options.GetPolicy(alwaysDenyPolicyName)!;
+    options.DefaultPolicy = alwaysDeny;
+    options.FallbackPolicy = alwaysDeny;
+
+    options.AddPolicy("User", policy => policy.RequireRole("User"));
+});
 
 /*
  * Build
@@ -26,9 +44,14 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
+app.UseAuthentication();
+app.UseAuthorization();
+
 app.MapGet("/", () => "Hello World!")
    .WithName("Hello")
-   .WithOpenApi();
+   .WithOpenApi()
+   .AllowAnonymous();
+   ;
 
 app.MapGet("/Secured/{id}", (
     [FromRoute]int id,
@@ -50,7 +73,7 @@ app.MapGet("/Secured/{id}", (
     }
 })
    .WithName("SecuredHello")
-//    .RequireAuthorization()
+   .RequireAuthorization("User")
    .WithOpenApi();
 
 app.Run();
